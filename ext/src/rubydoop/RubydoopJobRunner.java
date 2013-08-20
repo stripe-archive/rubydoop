@@ -65,6 +65,10 @@ public class RubydoopJobRunner extends Configured implements Tool {
         for (Job job : jobs) {
             job.getConfiguration().set(InstanceContainer.JOB_SETUP_SCRIPT_KEY, jobSetupScript);
             job.setJarByClass(getClass());
+
+            if (job.getConfiguration().getBoolean("rubydoop.submit_async", false)) {
+              job.submit();
+            }
         }
 
         return jobs;

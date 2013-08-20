@@ -56,9 +56,9 @@ module Rubydoop
       @context.arguments
     end
 
-    def job(name, &block)
+    def job(name, opts={}, &block)
       return nil unless @context
-      job = JobDefinition.new(@context, @context.create_job(name))
+      job = JobDefinition.new(@context, @context.create_job(name), opts)
       job.instance_exec(&block)
       job
     end
@@ -71,9 +71,11 @@ module Rubydoop
   #
   class JobDefinition
     # @private
-    def initialize(context, job)
+    def initialize(context, job, opts={})
       @context = context
       @job = job
+
+      set('rubydoop.submit_async', true) if opts[:async]
     end
 
     # Sets the input paths of the job.

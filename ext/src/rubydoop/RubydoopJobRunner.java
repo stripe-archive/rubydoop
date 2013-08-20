@@ -1,9 +1,9 @@
 package rubydoop;
 
-
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.HashMap;
@@ -24,11 +24,24 @@ public class RubydoopJobRunner extends Configured implements Tool {
     public int run(String[] args) throws Exception {
         String jobSetupScript = args[0];
         String[] arguments = Arrays.copyOfRange(args, 1, args.length);
+        List<Job> jobs = configureJobs(jobSetupScript, arguments);
+        ArrayList<Job> remainingJobs = new ArrayList<Job>(jobs.size());
 
-        for (Job job : configureJobs(jobSetupScript, arguments)) {
+        for (Job job : jobs) {
+          if (job.getConfiguration().getBoolean("rubydoop.submit_async", false)) {
+            job.submit();
+            remainingJobs.add(job);
+          } else {
             if (!job.waitForCompletion(true)) {
                 return 1;
             }
+          }
+        }
+
+        for (Job job : remainingJobs) {
+          if (!job.waitForCompletion(true)) {
+              return 1;
+          }
         }
 
         return 0;
@@ -65,10 +78,6 @@ public class RubydoopJobRunner extends Configured implements Tool {
         for (Job job : jobs) {
             job.getConfiguration().set(InstanceContainer.JOB_SETUP_SCRIPT_KEY, jobSetupScript);
             job.setJarByClass(getClass());
-
-            if (job.getConfiguration().getBoolean("rubydoop.submit_async", false)) {
-              job.submit();
-            }
         }
 
         return jobs;

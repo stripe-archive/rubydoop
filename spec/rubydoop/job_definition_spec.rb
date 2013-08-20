@@ -30,6 +30,13 @@ module Rubydoop
       described_class.new(context, job)
     end
 
+    describe '#initialize' do
+      it 'should set rubydoop.submit_async on the configuration if :async is passed' do
+        async_definition = described_class.new(context, job, :async => true)
+        configuration.get_boolean('rubydoop.submit_async', false).should == true
+      end
+    end
+
     describe '#input' do
       it 'should take a single path' do
         job_definition.input('secret_rubydoop_path')
